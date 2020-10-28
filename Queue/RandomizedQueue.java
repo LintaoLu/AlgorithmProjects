@@ -80,14 +80,21 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
         }
 
         public void add(Item item) {
-            if (size() >= buffer.length / 2) expandBuffer();
+            if (size() >= buffer.length / 2) grow();
             buffer[++index] = item;
         }
 
-        private void expandBuffer() {
+        private void grow() {
             int capacity = buffer.length;
             Item[] temp = (Item[]) new Object[capacity * 2];
             System.arraycopy(buffer, 0, temp, 0, capacity);
+            buffer = temp;
+        }
+
+        private void reduce() {
+            int capacity = buffer.length;
+            Item[] temp = (Item[]) new Object[capacity / 4];
+            if (index + 1 >= 0) System.arraycopy(buffer, 0, temp, 0, index + 1);
             buffer = temp;
         }
 
@@ -106,6 +113,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
             if (index < 0) {
                 throw new IllegalArgumentException();
             }
+            if (size() < buffer.length / 4) reduce();
             index--;
         }
 
