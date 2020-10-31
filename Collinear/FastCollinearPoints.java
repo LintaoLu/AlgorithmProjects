@@ -28,9 +28,7 @@ public class FastCollinearPoints {
      */
     private LineSegment[] findLine(Point[] points) {
         int n = points.length;
-        Point[] auxiliary = new Point[n];
-        // copy references
-        System.arraycopy(points, 0, auxiliary, 0, n);
+        Point[] auxiliary = points.clone();
         ArrayList<Data> buffer = new ArrayList<>();
         for (Point point : points) {
             Comparator<Point> cmp = point.slopeOrder();
@@ -142,7 +140,7 @@ public class FastCollinearPoints {
         for (int i = 0, j = 0; i < points.length; i++, j += 2) {
             points[i] = new Point(test2[j], test2[j + 1]);
         }
-        FastCollinearPoints f = new FastCollinearPoints(null);
+        FastCollinearPoints f = new FastCollinearPoints(points);
         points[0] = null;
         System.out.println(f.numberOfSegments());
         System.out.println(Arrays.toString(f.segments()));
