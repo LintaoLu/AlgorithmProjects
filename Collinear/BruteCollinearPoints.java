@@ -8,16 +8,15 @@ import java.util.Arrays;
 
 public class BruteCollinearPoints {
 
-    private Point[] points, prePoints;
-    private LineSegment[] res;
+    private final LineSegment[] res;
 
     // finds all line segments containing 4 points
     public BruteCollinearPoints(Point[] points) {
-        this.points = points;
-        initialize();
+        checkInput(points);
+        res = findLine(points.clone());
     }
 
-    private LineSegment[] findLine() {
+    private LineSegment[] findLine(Point[] points) {
         ArrayList<LineSegment> buffer = new ArrayList<>();
         int n = points.length;
         for (int i = 0; i < n - 3; i++) {
@@ -37,36 +36,16 @@ public class BruteCollinearPoints {
 
     // the number of line segments
     public int numberOfSegments() {
-        if (isModified()) initialize();
         return res.length;
     }
 
     // the line segments
     public LineSegment[] segments()  {
-        if (isModified()) initialize();
-        return res;
-    }
-
-    // check if input array is modified
-    private boolean isModified() {
-        if (points == null || points.length != prePoints.length) return true;
-        for (int i = 0; i < points.length; i++) {
-            if (points[i] == null || points[i].compareTo(prePoints[i]) != 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void initialize() {
-        checkInput();
-        prePoints = new Point[points.length];
-        System.arraycopy(points, 0, prePoints, 0, points.length);
-        res = findLine();
+        return res.clone();
     }
 
     // check if input is valid
-    private void checkInput() {
+    private void checkInput(Point[] points) {
         // check null
         if (points == null) throw new IllegalArgumentException();
         for (Point point : points) {
@@ -91,7 +70,6 @@ public class BruteCollinearPoints {
             points[i] = new Point(arr[j], arr[j + 1]);
         }
         BruteCollinearPoints f = new BruteCollinearPoints(points);
-        System.out.println(Arrays.toString(f.points));
         System.out.println(f.numberOfSegments());
         System.out.println(Arrays.toString(f.segments()));
     }

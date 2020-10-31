@@ -5,13 +5,12 @@ import java.util.Collections;
 
 public class FastCollinearPoints {
 
-    private Point[] points, prePoints;
-    private LineSegment[] res;
+    private final LineSegment[] res;
 
     // finds all line segments containing 4 or more points
     public FastCollinearPoints(Point[] points) {
-        this.points = points;
-        initialize();
+        checkInput(points);
+        res = findLine(points.clone());
     }
 
     /**
@@ -25,26 +24,29 @@ public class FastCollinearPoints {
      * all duplicated answers' endpoints are same, we can simply remove duplications.
      *
      */
-    private LineSegment[] findLine() {
+    private LineSegment[] findLine(Point[] points) {
         int n = points.length;
         Point[] auxiliary = new Point[n];
+        // copy references
         System.arraycopy(points, 0, auxiliary, 0, n);
         ArrayList<Data> buffer = new ArrayList<>();
         for (Point point : points) {
             Comparator<Point> cmp = point.slopeOrder();
             Arrays.sort(auxiliary, cmp);
-            // for every answer, only preserve two endpoints
-            Point start = point, end = point;
-            for (int j = 0; j < n; j++) {
+            for (int i = 0; i < n; i++) {
                 // 4 or more than 4 points in this line
-                if (j + 2 < n && cmp.compare(auxiliary[j], auxiliary[j + 1]) == 0 &&
-                        cmp.compare(auxiliary[j + 1], auxiliary[j + 2]) == 0) {
-                    int index = j;
-                    while (j < n && cmp.compare(auxiliary[j], auxiliary[index]) == 0) {
-                        start = start.compareTo(auxiliary[j]) < 0 ? start : auxiliary[j];
-                        end = end.compareTo(auxiliary[j]) > 0 ? end : auxiliary[j];
-                        j++;
+                if (i + 2 < n && cmp.compare(auxiliary[i], auxiliary[i + 1]) == 0 &&
+                        cmp.compare(auxiliary[i + 1], auxiliary[i + 2]) == 0) {
+                    int first = i;
+                    // for every line, only preserve two endpoints
+                    Point start = point, end = point;
+                    while (i < n && cmp.compare(auxiliary[i], auxiliary[first]) == 0) {
+                        start = start.compareTo(auxiliary[i]) < 0 ? start : auxiliary[i];
+                        end = end.compareTo(auxiliary[i]) > 0 ? end : auxiliary[i];
+                        i++;
                     }
+                    // i is point to next element
+                    i--;
                     buffer.add(new Data(start, end));
                 }
             }
@@ -90,36 +92,16 @@ public class FastCollinearPoints {
 
     // the number of line segments
     public int numberOfSegments() {
-        if (isModified()) initialize();
         return res.length;
     }
 
     // the line segments
     public LineSegment[] segments()  {
-        if (isModified()) initialize();
-        return res;
-    }
-
-    // check if input array is modified
-    private boolean isModified() {
-        if (points == null || points.length != prePoints.length) return true;
-        for (int i = 0; i < points.length; i++) {
-            if (points[i] == null || points[i].compareTo(prePoints[i]) != 0) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private void initialize() {
-        checkInput();
-        prePoints = new Point[points.length];
-        System.arraycopy(points, 0, prePoints, 0, points.length);
-        res = findLine();
+        return res.clone();
     }
 
     // check if input is valid
-    private void checkInput() {
+    private void checkInput(Point[] points) {
         // check null
         if (points == null) throw new IllegalArgumentException();
         for (Point point : points) {
