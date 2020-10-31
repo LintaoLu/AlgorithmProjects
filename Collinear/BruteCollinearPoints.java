@@ -12,8 +12,10 @@ public class BruteCollinearPoints {
 
     // finds all line segments containing 4 points
     public BruteCollinearPoints(Point[] points) {
-        checkInput(points);
-        res = findLine(points.clone());
+        if (points == null) throw new IllegalArgumentException();
+        Point[] input = points.clone();
+        checkInput(input);
+        res = findLine(input);
     }
 
     private LineSegment[] findLine(Point[] points) {
@@ -46,8 +48,6 @@ public class BruteCollinearPoints {
 
     // check if input is valid
     private void checkInput(Point[] points) {
-        // check null
-        if (points == null) throw new IllegalArgumentException();
         for (Point point : points) {
             if (point == null) {
                 throw new IllegalArgumentException();
