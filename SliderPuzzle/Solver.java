@@ -17,28 +17,41 @@ public class Solver {
 
     private List<Board> solve(Board initial) {
         Board twin = initial.twin();
-        MinPQ<GameTreeNode> pq = new MinPQ<>();
-        pq.insert(new GameTreeNode(initial, null, Source.MAIN, 0));
-        pq.insert(new GameTreeNode(twin, null, Source.TWIN, 0));
+        MinPQ<GameTreeNode> mainPQ = new MinPQ<>();
+        MinPQ<GameTreeNode> twinPQ = new MinPQ<>();
+        mainPQ.insert(new GameTreeNode(initial, null, 0));
+        twinPQ.insert(new GameTreeNode(twin, null, 0));
         List<Board> res = new ArrayList<>();
 
-        while (!pq.isEmpty()) {
-            GameTreeNode parent = pq.delMin();
-            // System.out.println(node);
-            if (parent.board.isGoal()) {
-                solvable = parent.source == Source.MAIN;
-                if (solvable) findPath(parent, res);
+        while (!mainPQ.isEmpty() && !twinPQ.isEmpty()) {
+            GameTreeNode mParent = mainPQ.isEmpty() ? null : mainPQ.delMin();
+            if (mParent == null) break;
+            GameTreeNode tParent = twinPQ.isEmpty() ? null : twinPQ.delMin();
+
+            if (mParent.board.isGoal()) {
+                solvable = true;
+                findPath(mParent, res);
+                break;
+            }
+            if (tParent != null && tParent.board.isGoal()) {
+                solvable = false;
                 break;
             }
 
-            for (Board next : parent.board.neighbors()) {
-                Board grandparent = parent.pre == null ? null : parent.pre.board;
-                if (next.equals(grandparent)) continue;
-                GameTreeNode child = new GameTreeNode(next, parent, parent.source, parent.len + 1);
-                pq.insert(child);
-            }
+            findNeighbors(mParent, mainPQ);
+            findNeighbors(tParent, twinPQ);
         }
         return res;
+    }
+
+    private void findNeighbors(GameTreeNode parent, MinPQ<GameTreeNode> pq) {
+        if (parent == null) return;
+        for (Board next : parent.board.neighbors()) {
+            Board grandparent = parent.pre == null ? null : parent.pre.board;
+            if (next.equals(grandparent)) continue;
+            GameTreeNode child = new GameTreeNode(next, parent, parent.len + 1);
+            pq.insert(child);
+        }
     }
 
     // find path form goal board to initial board
@@ -71,24 +84,22 @@ public class Solver {
     private static class GameTreeNode implements Comparable<GameTreeNode> {
         final GameTreeNode pre;
         final Board board;
-        final Source source;
         final int len;
+        final int manhattan;
 
-        GameTreeNode(Board curr, GameTreeNode pre, Source source, int len) {
+        GameTreeNode(Board curr, GameTreeNode pre, int len) {
             this.pre = pre;
             this.board = curr;
-            this.source = source;
             this.len = len;
+            manhattan = curr.manhattan();
         }
 
         @Override
         public int compareTo(GameTreeNode other) {
             // if manhattan distance are equal, should consider length of the path
-            return board.manhattan() + len - other.board.manhattan() - other.len;
+            return manhattan + len - other.manhattan - other.len;
         }
     }
-
-    private enum Source { MAIN, TWIN }
 
     // test client (see below)
     public static void main(String[] args) {
@@ -114,8 +125,8 @@ public class Solver {
         Solver solver = new Solver(new Board(arr1));
         System.out.println(solver.moves());
         System.out.println(solver.isSolvable());
-//        Iterable<Board> solution = solver.solution();
-//        for (Board b : solution) System.out.println(b);
+        Iterable<Board> solution = solver.solution();
+        for (Board b : solution) System.out.println(b);
     }
 
 }
