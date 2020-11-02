@@ -9,9 +9,10 @@ import java.util.List;
 public class Board {
 
     private final int[][] tiles;
-    private int hamming, manhattan;
-    private List<Board> neighbors;
+    private final int hamming, manhattan;
+    private Iterable<Board> neighbors;
     private String strBoard;
+    private static final int[][] dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
 
     // create a board from an n-by-n array of tiles,
     // where tiles[row][col] = tile at (row, col)
@@ -22,12 +23,15 @@ public class Board {
         }
         // copy constructor
         this.tiles = copyTiles(tiles);
-        computeDistances(this.tiles);
+        int[] distances = computeDistances(this.tiles);
+        hamming = distances[0];
+        manhattan = distances[1];
     }
 
     // calculate hamming and manhattan distance
-    private void computeDistances(int[][] tiles) {
+    private int[] computeDistances(int[][] tiles) {
         int n = tiles.length;
+        int[] distances = new int[2];
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
                 int curr = tiles[i][j];
@@ -35,15 +39,17 @@ public class Board {
                 if (curr == 0) continue;
                 int target = i == n - 1 && j == n - 1 ? 0 : i * n + j + 1;
                 if (curr == target) continue;
-                hamming++;
+                distances[0]++;
                 int row = (curr - 1) / n, col = (curr - 1) % n;
-                manhattan += Math.abs(row - i) + Math.abs(col - j);
+                distances[1] += Math.abs(row - i) + Math.abs(col - j);
             }
         }
+        return distances;
     }
 
     // find all children
-    private void findNeighbours(int[][] tiles) {
+    private List<Board> findNeighbours(int[][] tiles) {
+        List<Board> res = new ArrayList<>();
         int n = tiles.length;
         int row = -1, col = -1;
         for (int i = 0; i < n; i++) {
@@ -54,16 +60,16 @@ public class Board {
                 }
             }
         }
-
-        int[][] dirs = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+        if (row == -1) return res;
         for (int[] dir : dirs) {
             int x = row + dir[0];
             int y = col + dir[1];
             if (!validIndices(x, y, n)) continue;
             int[][] neighbor = copyTiles(tiles);
             swap(x, y, row, col, neighbor);
-            neighbors.add(new Board(neighbor));
+            res.add(new Board(neighbor));
         }
+        return res;
     }
 
     // swap two element form two dimensional array
@@ -83,11 +89,12 @@ public class Board {
         // cache string board, only run loops one time
         if (strBoard != null) return strBoard;
         StringBuilder sb = new StringBuilder();
+        sb.append(dimension()).append('\n');
         for (int[] row : tiles) {
             for (int num : row) {
                 sb.append(getStringNum(num)).append(" ");
             }
-            sb.append("\n");
+            sb.append('\n');
         }
         return strBoard = sb.toString();
     }
@@ -95,12 +102,14 @@ public class Board {
     // convert a number to 3 chars string
     private String getStringNum(int num) {
         // You may also assume that 2 ≤ n < 128.
-        StringBuilder str = new StringBuilder(String.valueOf(num));
-        int diff = 3 - str.length();
+        int n = dimension();
+        int len = String.valueOf(n * n - 1).length();
+        String str = String.valueOf(num);
+        int diff = len - str.length();
         for (int i = 0; i < diff; i++) {
-            str.insert(0, "0");
+            str = " " + str;
         }
-        return str.toString();
+        return str;
     }
 
     // board dimension n
@@ -150,9 +159,7 @@ public class Board {
     public Iterable<Board> neighbors() {
         // cache neighbours, only be called 1 time
         if (neighbors != null) return neighbors;
-        neighbors = new ArrayList<>();
-        findNeighbours(tiles);
-        return neighbors;
+        return neighbors = findNeighbours(tiles);
     }
 
     // a board that is obtained by exchanging any pair of tiles
@@ -177,7 +184,13 @@ public class Board {
 
     // unit testing (not graded)
     public static void main(String[] args) {
-        int[][] arr1 = {{8, 1, 3}, {4, 0, 2}, {7, 6, 5}};
+        int[][] arr1 = {
+                {1, 2, 3, 4, 5},
+                {6, 7, 8, 9, 10},
+                {11, 12, 13, 14, 15},
+                {16, 17, 18, 19, 20},
+                {0, 21, 22, 23, 24}
+        };
         Board board1 = new Board(arr1);
         Board board2 = board1.twin();
         System.out.println(board1);
