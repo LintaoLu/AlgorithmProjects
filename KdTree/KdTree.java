@@ -105,24 +105,20 @@ public class KdTree {
         }
         double x1 = curr.xmin(), y1 = curr.ymin(), x2 = curr.xmax(), y2 = curr.ymax();
         if (h % 2 == 0) {
-            RectHV rec1 = new RectHV(x1, y1, node.x(), y2);
-            RectHV rec2 = new RectHV(node.x(), y1, x2, y2);
             if (p.x() < node.x()) {
-                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
-                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+                findClosestPoint(p, new RectHV(x1, y1, node.x(), y2), distance, res, node.left, h + 1);
+                findClosestPoint(p, new RectHV(node.x(), y1, x2, y2), distance, res, node.right, h + 1);
             } else {
-                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
-                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+                findClosestPoint(p, new RectHV(node.x(), y1, x2, y2), distance, res, node.right, h + 1);
+                findClosestPoint(p, new RectHV(x1, y1, node.x(), y2), distance, res, node.left, h + 1);
             }
         } else {
-            RectHV rec1 = new RectHV(x1, y1, x2, node.y());
-            RectHV rec2 = new RectHV(x1, node.y(), x2, y2);
             if (p.y() < node.y()) {
-                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
-                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+                findClosestPoint(p, new RectHV(x1, y1, x2, node.y()), distance, res, node.left, h + 1);
+                findClosestPoint(p, new RectHV(x1, node.y(), x2, y2), distance, res, node.right, h + 1);
             } else {
-                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
-                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+                findClosestPoint(p, new RectHV(x1, node.y(), x2, y2), distance, res, node.right, h + 1);
+                findClosestPoint(p, new RectHV(x1, y1, x2, node.y()), distance, res, node.left, h + 1);
             }
         }
     }
