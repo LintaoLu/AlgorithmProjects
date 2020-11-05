@@ -25,12 +25,15 @@ public class KdTree {
 
     // add the point to the set (if it is not already in the set)
     public void insert(Point2D p) {
+        if (p == null) throw new IllegalArgumentException();
         root = insert(p, root, 0);
-        size++;
     }
 
     private TreeNode insert(Point2D p, TreeNode node, int h) {
-        if (node == null) return new TreeNode(p);
+        if (node == null) {
+            size++;
+            return new TreeNode(p);
+        }
         // the node is already been inserted
         if (node.samePoint(p)) return node;
         if (h % 2 == 0) {
@@ -45,6 +48,7 @@ public class KdTree {
 
     // does the set contain point p?
     public boolean contains(Point2D p) {
+        if (p == null) throw new IllegalArgumentException();
         return find(p, root, 0);
     }
 
@@ -61,12 +65,11 @@ public class KdTree {
     }
 
     // draw all points to standard draw
-    public void draw() {
-
-    }
+    public void draw() { }
 
     // all points that are inside the rectangle (or on the boundary)
     public Iterable<Point2D> range(RectHV rect) {
+        if (rect == null) throw new IllegalArgumentException();
         List<Point2D> list = new ArrayList<>();
         rangeSearch(new RectHV(0.0, 0.0, 1.0, 1.0), 0, root, rect, list);
         return list;
@@ -87,6 +90,7 @@ public class KdTree {
 
     // a nearest neighbor in the set to point p; null if the set is empty
     public Point2D nearest(Point2D p) {
+        if (p == null) throw new IllegalArgumentException();
         double[] distance = { Double.POSITIVE_INFINITY };
         Point2D[] res = new Point2D[1];
         findClosestPoint(p, new RectHV(0.0, 0.0, 1.0, 1.0), distance, res, root, 0);
@@ -95,32 +99,32 @@ public class KdTree {
 
     private void findClosestPoint(Point2D p, RectHV curr, double[] distance, Point2D[] res, TreeNode node, int h) {
         if (node == null || distance[0] < curr.distanceTo(p)) return;
-        if (node.point2D.distanceTo(p) < distance[0]) {
-            distance[0] = node.point2D.distanceTo(p);
+        if (distance[0] > node.point2D.distanceTo(p)) {
             res[0] = node.point2D;
+            distance[0] = node.point2D.distanceTo(p);
         }
         double x1 = curr.xmin(), y1 = curr.ymin(), x2 = curr.xmax(), y2 = curr.ymax();
         if (h % 2 == 0) {
-            findClosestPoint(p, new RectHV(x1, y1, node.x(), y2), distance, res, node.left, h + 1);
-            findClosestPoint(p, new RectHV(node.x(), y1, x2, y2), distance, res, node.right, h + 1);
+            RectHV rec1 = new RectHV(x1, y1, node.x(), y2);
+            RectHV rec2 = new RectHV(node.x(), y1, x2, y2);
+            if (p.x() < node.x()) {
+                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+            } else {
+                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+            }
         } else {
-            findClosestPoint(p, new RectHV(x1, y1, x2, node.y()), distance, res, node.left, h + 1);
-            findClosestPoint(p, new RectHV(x1, node.y(), x2, y2), distance, res, node.right, h + 1);
+            RectHV rec1 = new RectHV(x1, y1, x2, node.y());
+            RectHV rec2 = new RectHV(x1, node.y(), x2, y2);
+            if (p.y() < node.y()) {
+                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+            } else {
+                findClosestPoint(p, rec2, distance, res, node.right, h + 1);
+                findClosestPoint(p, rec1, distance, res, node.left, h + 1);
+            }
         }
-    }
-
-    private List<List<Point2D>> findAll() {
-        List<List<Point2D>> list = new ArrayList<>();
-        dfs(root, list, 0);
-        return list;
-    }
-
-    private void dfs(TreeNode node, List<List<Point2D>> list, int h) {
-        if (node == null) return;
-        if (h == list.size()) list.add(new ArrayList<>());
-        dfs(node.left, list, h + 1);
-        list.get(h).add(node.point2D);
-        dfs(node.right, list, h + 1);
     }
 
     private static class TreeNode {
@@ -138,13 +142,14 @@ public class KdTree {
 
     // unit testing of the methods (optional)
     public static void main(String[] args) {
+        // KdTree kdTree = new KdTree();
         KdTree kdTree = new KdTree();
-        kdTree.insert(new Point2D(0.7, 0.2));
-        kdTree.insert(new Point2D(0.5, 0.4));
-        kdTree.insert(new Point2D(0.2, 0.3));
-        kdTree.insert(new Point2D(0.4, 0.7));
-        kdTree.insert(new Point2D(0.9, 0.6));
-        System.out.println(kdTree.nearest(new Point2D(0.91, 0.6)));
+        String input = "0.7 0.2 0.5 0.4 0.2 0.3 0.4 0.7 0.9 0.6";
+        String[] numbers = input.split(" ");
+        for (int i = 0; i < numbers.length; i += 2) {
+            kdTree.insert(new Point2D(Double.parseDouble(numbers[i]), Double.parseDouble(numbers[i+1])));
+        }
+        System.out.println(kdTree.nearest(new Point2D(0.97, 0.79)));
     }
 
 }
