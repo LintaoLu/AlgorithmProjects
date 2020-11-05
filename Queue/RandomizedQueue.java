@@ -69,7 +69,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
         public DynamicArray() {
             index = -1;
-            buffer = (Item[]) new Object[1000];
+            buffer = (Item[]) new Object[10];
         }
 
         public Item get(int pos) {
@@ -86,7 +86,7 @@ public class RandomizedQueue<Item> implements Iterable<Item> {
 
         private void grow() {
             int capacity = buffer.length;
-            Item[] temp = (Item[]) new Object[capacity * 2];
+            Item[] temp = (Item[]) new Object[capacity / 2 * 3 + 1];
             System.arraycopy(buffer, 0, temp, 0, capacity);
             buffer = temp;
         }
