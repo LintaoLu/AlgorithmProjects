@@ -32,7 +32,7 @@ public class WordNet {
             // check if the graph is single source
             if (neighbours.size() == 0) {
                 if (root == null) root = from;
-                // different roots, return false
+                    // different roots, return false
                 else if (!from.equals(root)) {
                     throw new IllegalArgumentException("Multiple roots!");
                 }
@@ -44,9 +44,10 @@ public class WordNet {
             }
         }
         // check cycle
-        if (num != 0) throw new IllegalArgumentException("Find circle!");
+        if (num != 0) throw new IllegalArgumentException("Circle found!");
     }
 
+    // create a grapg and check if this graph is valid (single root DAG)
     private void constructGraph(String synsets, String hypernyms) {
         List<List<String>> dictionary = constructDictionary(synsets);
         Map<String, Integer> degree = new HashMap<>();
@@ -78,6 +79,7 @@ public class WordNet {
         checkGraph(degree);
     }
 
+    // read all words form a String
     private List<List<String>> constructDictionary(String synsets) {
         List<List<String>> list = new ArrayList<>();
         // format: 1,1530s,the decade from 1530 to 1539
@@ -85,10 +87,7 @@ public class WordNet {
         while (iterator.hasNext()) {
             String[] line = iterator.next().split(",");
             String[] words = line[1].split(" ");
-            list.add(new ArrayList<>());
-            for (String word : words) {
-                list.get(list.size() - 1).add(word);
-            }
+            list.add(new ArrayList<>(Arrays.asList(words)));
         }
         return list;
     }
@@ -100,7 +99,7 @@ public class WordNet {
 
     // is the word a WordNet noun?
     public boolean isNoun(String word) {
-        if (word == null) throw new IllegalArgumentException();
+        if (word == null) throw new IllegalArgumentException("Null arguments!");
         return nounSet.contains(word);
     }
 
@@ -109,13 +108,14 @@ public class WordNet {
         if (nounA == null || nounB == null) {
             throw new IllegalArgumentException("Invalid arguments!");
         }
-        if (!nounSet.contains(nounA) || !nounSet.contains(nounB)) {
+        if (!isNoun(nounA) || !isNoun(nounB)) {
             throw new IllegalArgumentException("Arguments not noun!");
         }
         String ancestor = sap(nounA, nounB);
         return getDistance(nounA, ancestor) + getDistance(nounB, ancestor);
     }
 
+    // distance from a word to another (dfs)
     private int getDistance(String curr, String end) {
         if (curr.equals(end)) return 0;
         int min = Integer.MAX_VALUE;
@@ -131,14 +131,15 @@ public class WordNet {
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
         if (nounA == null || nounB == null) {
-            throw new IllegalArgumentException("Invalid arguments!");
+            throw new IllegalArgumentException("Null arguments!");
         }
-        if (!nounSet.contains(nounA) || !nounSet.contains(nounB)) {
+        if (!isNoun(nounA) || !isNoun(nounB)) {
             throw new IllegalArgumentException("Arguments not noun!");
         }
         Map<String, Integer> map1 = new HashMap<>(), map2 = new HashMap<>();
-        findPathsNodes(nounA, map1, 0);
-        findPathsNodes(nounB, map2, 0);
+        findPathsWords(nounA, map1, 0);
+        findPathsWords(nounB, map2, 0);
+        // a small optimization, compare smaller set to bigger set
         if (map1.size() > map2.size()) {
             Map<String, Integer> map3 = map1;
             map1 = map2;
@@ -160,14 +161,16 @@ public class WordNet {
         return ancestor;
     }
 
-    private void findPathsNodes(String str, Map<String, Integer> map, int step) {
+    // find all word on paths (path: from str to root) by using dfs
+    private void findPathsWords(String str, Map<String, Integer> map, int step) {
         map.put(str, step);
         List<String> neighbors = graph.get(str);
         for (String next : neighbors) {
-            findPathsNodes(next, map, step + 1);
+            findPathsWords(next, map, step + 1);
         }
     }
 
+    // read String line by line
     private static class InputIterator implements Iterator<String> {
         private final String input;
         private int curr;
