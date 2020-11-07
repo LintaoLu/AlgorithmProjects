@@ -108,31 +108,33 @@ public class WordNet {
         if (!isNoun(nounA) || !isNoun(nounB)) {
             throw new IllegalArgumentException("Arguments not noun!");
         }
-        String ancestor = sap(nounA, nounB);
-        return getDistance(nounA, ancestor) + getDistance(nounB, ancestor);
+        return Integer.parseInt(getLCA(nounA, nounB)[1]);
     }
 
-    // distance from a word to another (dfs)
-    private int getDistance(String curr, String end) {
-        if (curr.equals(end)) return 0;
-        int min = Integer.MAX_VALUE;
-        for (String next : graph.get(curr)) {
-            int ret = getDistance(next, end);
-            if (ret == Integer.MAX_VALUE) continue;
-            min = Math.min(min, 1 + ret);
+    // BFS shortest distance from a word to other words
+    private Map<String, Integer> shortestPath(String word) {
+        Map<String, Integer> dis = new HashMap<>();
+        Queue<String> queue = new LinkedList<>();
+        queue.offer(word);
+        int step = 0;
+        while (!queue.isEmpty()) {
+            int size = queue.size();
+            for (int i = 0; i < size; i++) {
+                String from = queue.poll();
+                if (dis.getOrDefault(from, Integer.MAX_VALUE) < step) continue;
+                dis.put(from, step);
+                for (String to : graph.get(from)) {
+                    queue.offer(to);
+                }
+            }
+            step++;
         }
-        return min;
+        return dis;
     }
 
-    // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
-    // in a shortest ancestral path (defined below)
-    public String sap(String nounA, String nounB) {
-        if (!isNoun(nounA) || !isNoun(nounB)) {
-            throw new IllegalArgumentException("Arguments not noun!");
-        }
-        Map<String, Integer> map1 = new HashMap<>(), map2 = new HashMap<>();
-        findPathsWords(nounA, map1, 0);
-        findPathsWords(nounB, map2, 0);
+    private String[] getLCA(String nounA, String nounB) {
+        Map<String, Integer> map1 = shortestPath(nounA);
+        Map<String, Integer> map2 = shortestPath(nounB);
         // a small optimization, compare smaller set to bigger set
         if (map1.size() > map2.size()) {
             Map<String, Integer> map3 = map1;
@@ -152,16 +154,16 @@ public class WordNet {
                 }
             }
         }
-        return ancestor;
+        return new String[] { ancestor, String.valueOf(min) };
     }
 
-    // find all word on paths (path: from str to root) by using dfs
-    private void findPathsWords(String str, Map<String, Integer> map, int step) {
-        map.put(str, step);
-        List<String> neighbors = graph.get(str);
-        for (String next : neighbors) {
-            findPathsWords(next, map, step + 1);
+    // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
+    // in a shortest ancestral path (defined below)
+    public String sap(String nounA, String nounB) {
+        if (!isNoun(nounA) || !isNoun(nounB)) {
+            throw new IllegalArgumentException("Arguments not noun!");
         }
+        return getLCA(nounA, nounB)[0];
     }
 
     // read String line by line
@@ -180,7 +182,7 @@ public class WordNet {
 
         @Override
         public String next() {
-            if (!hasNext()) throw new java.util.NoSuchElementException();
+            if (!hasNext()) throw new NoSuchElementException();
             int start = curr;
             while (curr != input.length() && input.charAt(curr) != '\n') {
                 curr++;
