@@ -105,9 +105,6 @@ public class WordNet {
 
     // distance between nounA and nounB (defined below)
     public int distance(String nounA, String nounB) {
-        if (nounA == null || nounB == null) {
-            throw new IllegalArgumentException("Invalid arguments!");
-        }
         if (!isNoun(nounA) || !isNoun(nounB)) {
             throw new IllegalArgumentException("Arguments not noun!");
         }
@@ -130,9 +127,6 @@ public class WordNet {
     // a synset (second field of synsets.txt) that is the common ancestor of nounA and nounB
     // in a shortest ancestral path (defined below)
     public String sap(String nounA, String nounB) {
-        if (nounA == null || nounB == null) {
-            throw new IllegalArgumentException("Null arguments!");
-        }
         if (!isNoun(nounA) || !isNoun(nounB)) {
             throw new IllegalArgumentException("Arguments not noun!");
         }
