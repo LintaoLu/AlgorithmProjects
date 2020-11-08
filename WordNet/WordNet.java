@@ -5,7 +5,7 @@ import edu.princeton.cs.algs4.Topological;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Map;
-import java.util.TreeMap;
+import java.util.HashMap;
 
 public class WordNet {
 
@@ -18,9 +18,25 @@ public class WordNet {
         if (synsets == null || hypernyms == null) {
             throw new IllegalArgumentException("Null arguments!");
         }
-        nouns = new TreeMap<>();
+        nouns = new HashMap<>();
         dict = getDictionary(synsets, nouns);
         sap = new SAP(createGraph(hypernyms, dict.size()));
+    }
+
+    private void validateGraph(Digraph G) {
+        // check if graph is DAG
+        Topological topological = new Topological(G);
+        if (!topological.hasOrder()) {
+            throw new IllegalArgumentException("Not DAG!");
+        }
+        // check if the graph has multiple roots
+        int num = 0;
+        for (int i = 0; i < G.V(); i++) {
+            if (G.outdegree(i) == 0) num++;
+            if (num > 1) {
+                throw new IllegalArgumentException("Multiple roots!");
+            }
+        }
     }
 
     // create graph
@@ -30,30 +46,24 @@ public class WordNet {
         while (in.hasNextLine()) {
             // format: 34,47569,48084
             String[] ids = in.readLine().split(",");
-            if (ids.length < 2) throw new IllegalArgumentException();
             int from = Integer.parseInt(ids[0]);
             for (int i = 1; i < ids.length; i++) {
                 int to = Integer.parseInt(ids[i]);
                 G.addEdge(from, to);
             }
         }
-        // check if graph is DAG
-        Topological topological = new Topological(G);
-        if (!topological.hasOrder()) {
-            throw new IllegalArgumentException();
-        }
         in.close();
+        validateGraph(G);
         return G;
     }
 
-    // read all words form a String
+    // read all words form a file
     private List<String> getDictionary(String synsets, Map<String, List<Integer>> nouns) {
         List<String> dict = new ArrayList<>();
         // format: 1,1530s,the decade from 1530 to 1539
         In in = new In(synsets);
         while (in.hasNextLine()) {
             String[] line = in.readLine().split(",");
-            if (line.length < 3) throw new IllegalArgumentException();
             dict.add(line[1]);
             String[] words = line[1].split(" ");
             for (String word : words) {
