@@ -13,6 +13,7 @@ public class SeamCarver {
 
     // create a seam carver object based on the given picture
     public SeamCarver(Picture picture) {
+        if (picture == null) throw new IllegalArgumentException();
         RGB = getRGBArray(picture);
         ENERGY = getEnergyArray(picture);
     }
