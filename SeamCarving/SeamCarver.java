@@ -33,7 +33,7 @@ public class SeamCarver {
         double[][] ENERGY = new double[m][n];
         for (int row = 0; row < m; row++) {
             for (int col = 0; col < n; col++) {
-                ENERGY[row][col] = energy(row, col);
+                ENERGY[row][col] = energy(col, row);
             }
         }
         return ENERGY;
@@ -63,6 +63,10 @@ public class SeamCarver {
 
     // energy of pixel at column x and row y
     public double energy(int x, int y) {
+        return reverse(y, x);
+    }
+
+    private double reverse(int x, int y) {
         if (invalidIndices(x, y)) throw new IllegalArgumentException();
         if (x == 0 || x == height() - 1 || y == 0 || y == width() - 1) {
             return 1000;
@@ -120,7 +124,6 @@ public class SeamCarver {
             double len = Double.POSITIVE_INFINITY;
             for (int i = 0; i < size; i++) {
                 int[] from = queue.poll();
-                // assert from != null;
                 int x = from[0], y = from[1];
                 for (int[] to : adj(x, y, direction)) {
                     int xx = to[0], yy = to[1];
@@ -284,9 +287,9 @@ public class SeamCarver {
     private void reCalculateVEnergy(int[] seam, double[][] tENERGY) {
         for (int i = 0; i < seam.length; i++) {
             if (!invalidIndices(i, seam[i]-1))
-                tENERGY[i][seam[i]-1] = energy(i, seam[i]-1);
+                tENERGY[i][seam[i]-1] = energy(seam[i]-1, i);
             if (!invalidIndices(i, seam[i]))
-                tENERGY[i][seam[i]] = energy(i, seam[i]);
+                tENERGY[i][seam[i]] = energy(seam[i], i);
         }
     }
 
@@ -318,49 +321,19 @@ public class SeamCarver {
     private void reCalculateHEnergy(int[] seam, double[][] tENERGY) {
         for (int i = 0; i < seam.length; i++) {
             if (!invalidIndices(seam[i]-1, i))
-                tENERGY[seam[i]-1][i] = energy(seam[i]-1, i);
+                tENERGY[seam[i]-1][i] = energy(i, seam[i]-1);
             if (!invalidIndices(seam[i], i))
-                tENERGY[seam[i]][i] = energy(seam[i], i);;
+                tENERGY[seam[i]][i] = energy(i, seam[i]);
         }
     }
 
     //  unit testing (optional)
     public static void main(String[] args) {
-        int[][] arr = {
-                {255, 101, 51}, {255, 101, 153}, {255, 101, 255},
-                {255, 153, 51}, {255, 153, 153}, {255, 153, 255},
-                {255, 203, 51}, {255, 204, 153}, {255, 205, 255},
-                {255, 255, 51}, {255, 255, 153}, {255, 255, 255}
-        };
-        Picture picture = new Picture(3 , 4);
-        int index = 0;
-        for (int row = 0; row < 4; row++) {
-            for (int col = 0; col < 3; col++) {
-                int[] temp = arr[index++];
-                int val = (temp[0] << 16) | (temp[1] << 8) | (temp[2]);
-                picture.setRGB(col, row, val);
-            }
-        }
+        Picture picture = new Picture("6x5.png");
         SeamCarver seamCarver = new SeamCarver(picture);
-        for (int[] row : seamCarver.RGB) {
-            for (int color : row) {
-                System.out.print(Arrays.toString(seamCarver.decode(color)) + " ");
-            }
-            System.out.println();
+        for (double[] row : seamCarver.ENERGY) {
+            System.out.println(Arrays.toString(row));
         }
-        System.out.println();
-        for (double[] row : seamCarver.ENERGY) System.out.println(Arrays.toString(row));
-        System.out.println();
-        int[] seam = {0, 0, 2, 0};
-        seamCarver.removeVerticalSeam(seam);
-        for (int[] row : seamCarver.RGB) {
-            for (int color : row) {
-                System.out.print(Arrays.toString(seamCarver.decode(color)) + " ");
-            }
-            System.out.println();
-        }
-        System.out.println();
-        for (double[] row : seamCarver.ENERGY) System.out.println(Arrays.toString(row));
     }
 
 }
