@@ -205,23 +205,41 @@ public class SeamCarver {
 
     // remove horizontal seam from current picture
     public void removeHorizontalSeam(int[] seam) {
+        if (height() <= 1) throw new IllegalArgumentException();
         validateSeam(seam, Direction.HORIZONTAL);
         update(seam, Direction.HORIZONTAL);
     }
 
     // remove vertical seam from current picture
     public void removeVerticalSeam(int[] seam) {
+        if (width() <= 1) throw new IllegalArgumentException();
         validateSeam(seam, Direction.VERTICAL);
         update(seam, Direction.VERTICAL);
     }
 
     private void validateSeam(int[] seam, Direction dir) {
         if (seam == null) throw new IllegalArgumentException();
-        for (int i = 0; i < seam.length; i++) {
-            if (dir == Direction.VERTICAL && invalidIndices(i, seam[i])) {
-                throw new IllegalArgumentException();
-            } else if (dir == Direction.HORIZONTAL && invalidIndices(seam[i], i)) {
-                throw new IllegalArgumentException();
+        if (dir == Direction.VERTICAL) {
+            if (seam.length != height()) throw new IllegalArgumentException();
+            for (int i = 0; i < seam.length; i++) {
+                // out of bound
+                if (invalidIndices(i, seam[i])) {
+                    throw new IllegalArgumentException();
+                }
+                // diff more than 1
+                if (i > 0 && Math.abs(seam[i] - seam[i-1]) > 1) {
+                    throw new IllegalArgumentException();
+                }
+            }
+        } else if (dir == Direction.HORIZONTAL) {
+            if (seam.length != width()) throw new IllegalArgumentException();
+            for (int i = 0; i < seam.length; i++) {
+                if (invalidIndices(seam[i], i)) {
+                    throw new IllegalArgumentException();
+                }
+                if (i > 0 && Math.abs(seam[i] - seam[i-1]) > 1) {
+                    throw new IllegalArgumentException();
+                }
             }
         }
     }
@@ -239,8 +257,8 @@ public class SeamCarver {
     private int[][] removeVRGB(int[] seam) {
         int m = RGB.length, n = RGB[0].length;
         int[][] tRGB = new int[m][n-1];
-        for (int i = 0; i < RGB.length; i++) {
-            for (int j = 0; j < RGB[0].length; j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 if (j < seam[i]) tRGB[i][j] = RGB[i][j];
                 else if (j > seam[i]) tRGB[i][j-1] = RGB[i][j];
             }
@@ -251,8 +269,8 @@ public class SeamCarver {
     private double[][] removeVEnergy(int[] seam) {
         int m = ENERGY.length, n = ENERGY[0].length;
         double[][] tENERGY = new double[m][n-1];
-        for (int i = 0; i < ENERGY.length; i++) {
-            for (int j = 0; j < ENERGY[0].length; j++) {
+        for (int i = 0; i < m; i++) {
+            for (int j = 0; j < n; j++) {
                 if (j < seam[i]) tENERGY[i][j] = ENERGY[i][j];
                 else if (j > seam[i]) tENERGY[i][j-1] = ENERGY[i][j];
             }
@@ -275,8 +293,8 @@ public class SeamCarver {
     private int[][] removeHRGB(int[] seam) {
         int m = RGB.length, n = RGB[0].length;
         int[][] tRGB = new int[m-1][n];
-        for (int i = 0; i < RGB[0].length; i++) {
-            for (int j = 0; j < RGB.length; j++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
                 if (j > seam[i]) tRGB[j-1][i] = RGB[j][i];
                 else if (j < seam[i]) tRGB[j][i] = RGB[j][i];
             }
@@ -287,8 +305,8 @@ public class SeamCarver {
     private double[][] removeHEnergy(int[] seam) {
         int m = ENERGY.length, n = ENERGY[0].length;
         double[][] tENERGY = new double[m-1][n];
-        for (int i = 0; i < ENERGY[0].length; i++) {
-            for (int j = 0; j < ENERGY.length; j++) {
+        for (int i = 0; i < n; i++) {
+            for (int j = 0; j < m; j++) {
                 if (j > seam[i]) tENERGY[j-1][i] = ENERGY[j][i];
                 else if (j < seam[i]) tENERGY[j][i] = ENERGY[j][i];
             }
@@ -333,8 +351,8 @@ public class SeamCarver {
         System.out.println();
         for (double[] row : seamCarver.ENERGY) System.out.println(Arrays.toString(row));
         System.out.println();
-        int[] seam = {3, 3, 3};
-        seamCarver.removeHorizontalSeam(seam);
+        int[] seam = {0, 0, 2, 0};
+        seamCarver.removeVerticalSeam(seam);
         for (int[] row : seamCarver.RGB) {
             for (int color : row) {
                 System.out.print(Arrays.toString(seamCarver.decode(color)) + " ");
