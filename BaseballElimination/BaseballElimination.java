@@ -7,8 +7,6 @@ import edu.princeton.cs.algs4.Bag;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
-import java.util.HashSet;
 import java.util.ArrayList;
 
 public class BaseballElimination {
@@ -17,25 +15,22 @@ public class BaseballElimination {
     private final Map<String, int[]> teams;
     private final Map<String, List<String>> certificates;
     private final int[][] G;
-    private final Set<String> eliminatedTeams;
 
     // create a baseball division from given filename in format specified below
     public BaseballElimination(String filename) {
         if (filename == null)
             throw new IllegalArgumentException();
         teams = new HashMap<>();
-        certificates = new HashMap<>();
         G = readFile(filename, teams);
-        eliminatedTeams = findEliminatedTeams(certificates);
+        certificates = findEliminatedTeams();
     }
 
-    private void trivialCheck(Set<String> eliminatedTeams) {
+    private void trivialCheck(Map<String, List<String>> certificates) {
         for (String candidate : teams()) {
             int max = wins(candidate) + remaining(candidate);
             for (String team : teams()) {
                 if (max < wins(team)) {
                     List<String> list = new ArrayList<>();
-                    eliminatedTeams.add(candidate);
                     list.add(team);
                     certificates.put(candidate, list);
                     break;
@@ -44,17 +39,16 @@ public class BaseballElimination {
         }
     }
 
-    private Set<String> findEliminatedTeams(Map<String, List<String>> certificates) {
-        Set<String> eliminatedTeams = new HashSet<>();
-        trivialCheck(eliminatedTeams);
+    private Map<String, List<String>> findEliminatedTeams() {
+        Map<String, List<String>> certificates = new HashMap<>();
+        trivialCheck(certificates);
         for (String team : teams()) {
-            if (eliminatedTeams.contains(team)) continue;
+            if (certificates.containsKey(team)) continue;
             int[] capacity = new int[1];
             Bag<Pair<Integer, String>> ids = new Bag<>();
-            FlowNetwork net = createFlowNetWork(team, capacity, eliminatedTeams, ids);
+            FlowNetwork net = createFlowNetWork(team, ids, certificates, capacity);
             FordFulkerson fordFulkerson = new FordFulkerson(net, 0, net.V() - 1);
             if (fordFulkerson.value() < capacity[0]) {
-                eliminatedTeams.add(team);
                 List<String> list = new ArrayList<>();
                 for (Pair<Integer, String> entry : ids) {
                     if (fordFulkerson.inCut(entry.key)) {
@@ -64,15 +58,19 @@ public class BaseballElimination {
                 certificates.put(team, list);
             }
         }
-        return eliminatedTeams;
+        return certificates;
     }
 
     private int[][] readFile(String filename, Map<String, int[]> teams) {
         In in = new In(filename);
-        int n = Integer.parseInt(in.readLine()), line = 0;
+        String str = in.readLine();
+        if (str == null) throw new IllegalArgumentException();
+        int n = Integer.parseInt(str), line = 0;
         int[][] G = new int[n][n];
         while (in.hasNextLine()) {
-            String[] data = in.readLine().trim().split("\\s+");
+            str = in.readLine();
+            if (str == null) throw new IllegalArgumentException();
+            String[] data = str.trim().split("\\s+");
             int[] val = new int[4];
             // team id
             val[0] = line++;
@@ -87,17 +85,17 @@ public class BaseballElimination {
         return G;
     }
 
-    private FlowNetwork createFlowNetWork(String candidate, int[] capacity,
-                                          Set<String> eliminatedTeams, Bag<Pair<Integer, String>> ids) {
-        int n = numberOfTeams() - eliminatedTeams.size() - 1, index = 0;
+    private FlowNetwork createFlowNetWork(String candidate, Bag<Pair<Integer, String>> ids,
+                                          Map<String, List<String>> certificate, int[] capacity) {
+        int n = numberOfTeams() - certificate.size() - 1, index = 0;
         String[] sub = new String[n];
         for (String team : teams()) {
-            if (team.equals(candidate) || eliminatedTeams.contains(team)) continue;
+            if (team.equals(candidate) || certificate.containsKey(team)) continue;
             sub[index++] = team;
         }
         int offset1 = 1, offset2 = n * (n - 1) / 2 + 1;
         int size = offset2 + n + 1;
-        FlowNetwork net= new FlowNetwork(size);
+        FlowNetwork net = new FlowNetwork(size);
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
                 int id1 = getTeamId(sub[i]), id2 = getTeamId(sub[j]);
@@ -167,7 +165,7 @@ public class BaseballElimination {
     // is given team eliminated?
     public boolean isEliminated(String team) {
         validateTeam(team);
-        return eliminatedTeams.contains(team);
+        return certificates.containsKey(team);
     }
 
     // subset R of teams that eliminates given team; null if not eliminated
