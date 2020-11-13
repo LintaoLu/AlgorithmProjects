@@ -98,9 +98,9 @@ public class BaseballElimination {
         FlowNetwork net = new FlowNetwork(size);
         for (int i = 0; i < n; i++) {
             for (int j = i + 1; j < n; j++) {
-                int id1 = getTeamId(sub[i]), id2 = getTeamId(sub[j]);
-                capacity[0] += G[id1][id2];
-                net.addEdge(new FlowEdge(0, offset1, G[id1][id2]));
+                int val = against(sub[i], sub[j]);
+                capacity[0] += val;
+                net.addEdge(new FlowEdge(0, offset1, val));
                 net.addEdge(new FlowEdge(offset1, offset2 + i, Double.POSITIVE_INFINITY));
                 net.addEdge(new FlowEdge(offset1, offset2 + j, Double.POSITIVE_INFINITY));
                 offset1++;
