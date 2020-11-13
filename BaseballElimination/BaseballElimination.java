@@ -82,6 +82,7 @@ public class BaseballElimination {
             for (int i = 0; i < n; i++)
                 G[val[0]][i] = Integer.parseInt(data[i + 4]);
         }
+        in.close();
         return G;
     }
 
