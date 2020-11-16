@@ -1,6 +1,6 @@
 # Algorithms
 
-All homework assignments form Princeton Algorithms course (coursera).
+All homework assignments are form Princeton Algorithms course (coursera).
 Pass 100%.
 
 Princeton Algorithms part I: https://www.coursera.org/learn/algorithms-part1
