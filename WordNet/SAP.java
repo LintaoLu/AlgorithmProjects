@@ -19,8 +19,6 @@ public class SAP {
         List<Integer> list1 = new ArrayList<>(), list2 = new ArrayList<>();
         list1.add(v);
         list2.add(w);
-        validateVertex(list1);
-        validateVertex(list2);
         return length(list1, list2);
     }
 
@@ -29,8 +27,6 @@ public class SAP {
         List<Integer> list1 = new ArrayList<>(), list2 = new ArrayList<>();
         list1.add(v);
         list2.add(w);
-        validateVertex(list1);
-        validateVertex(list2);
         return ancestor(list1, list2);
     }
 
