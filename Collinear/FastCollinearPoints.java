@@ -14,18 +14,7 @@ public class FastCollinearPoints {
         checkInput(input);
         res = findLine(input);
     }
-
-    /**
-     *
-     * For each point, sort auxiliary array according to the slop order of
-     * his point. Then all points that in a same line should be closed to
-     * each other. If we can find 3 consecutive points (be careful since maybe
-     * more than 4 points in this line), which means this is line), which means
-     * this is a legal line, we should get smallest point and biggest
-     * point (endpoints) among them and finally put the pair to a list. Because
-     * all duplicated answers' endpoints are same, we can simply remove duplications.
-     *
-     */
+    
     private LineSegment[] findLine(Point[] points) {
         int n = points.length;
         Point[] auxiliary = points.clone();
